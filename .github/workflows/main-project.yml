@@ -1,0 +1,30 @@
+name: Full Project Pipeline
+on: [push, pull_request]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20] # Expert Tip: Testing on multiple versions at once
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm' # High-speed caching
+      - run: npm install
+      - run: npm test
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.node-version }}
+          path: ./
+
+  deploy-prod:
+    needs: test-and-build
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying version 1.0 to production..."
